@@ -1,5 +1,5 @@
 ---
-title: "Final Project 607 - Housing Sales Price"
+title: "Final Project 607 - Housing Sales Prices"
 author: "Blessing Anoroh"
 date: "May 1, 2024"
 output: html_document
@@ -385,6 +385,13 @@ browseURL(crimedata_url)
 
 ```
 
+\
+
+## Conclusion
+
+ In conclusion we can see variables of location, year built, and gross square feet plays major roles in Housing Sales Prices , most especially Location. Overall, this conclusion highlights the importance of thorough analysis and data-driven decision-making in the real estate market, as well as providing insights into the factors driving house prices and how they can be leveraged to make informed decisions.
+
+\
 
 
 
@@ -399,9 +406,5 @@ browseURL(crimedata_url)
 
 
 
-
-
-
-```
 
 
