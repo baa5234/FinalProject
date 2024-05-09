@@ -389,22 +389,8 @@ browseURL(crimedata_url)
 
 ## Conclusion
 
- In conclusion we can see variables of location, year built, and gross square feet plays major roles in Housing Sales Prices , most especially Location. Overall, this conclusion highlights the importance of thorough analysis and data-driven decision-making in the real estate market, as well as providing insights into the factors driving house prices and how they can be leveraged to make informed decisions.
+ In conclusion we can see variables of neighborhood(location), year built, and gross square feet plays major roles in Housing Sales Prices , most especially neighborhood. Overall, this conclusion highlights the importance of thorough analysis and data-driven decision-making in the real estate market, as well as providing insights into the factors driving house prices and how they can be leveraged to make informed decisions.
 
 \
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
