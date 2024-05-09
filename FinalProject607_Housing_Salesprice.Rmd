@@ -1,0 +1,407 @@
+---
+title: "Final Project 607 - Housing Sales Price"
+author: "Blessing Anoroh"
+date: "May 1, 2024"
+output: html_document
+---
+
+## Overview
+
+Housing sales price refers to the monetary value at which a residential property is bought or sold in a given market. This price is influenced by various factors such as location, size and condition of the property, local economic conditions, crime, amenities, and demand-supply dynamics. Housing sales price serves as a crucial indicator of the real estate market's health and can impact homeowners, investors, and policymakers alike. Understanding the determinants of housing sales price and analyzing its trends can provide valuable insights into the dynamics of the housing market, inform investment decisions, and aid in policy formulation related to housing affordability, urban planning, and economic development.
+
+We will be analyzing housing sales prices in Bronx of 2023. Analyzing housing sales prices in Bronx, New York, holds particular significance due to its unique characteristics and position within the broader New York City real estate market. As one of the five boroughs of New York City, Bronx exhibits a diverse mix of residential properties ranging from single-family homes to multifamily buildings and condominiums. Historically, Bronx has experienced fluctuations in its housing market, influenced by factors such as urban renewal initiatives, demographic shifts, and economic development projects. Analyzing housing sales prices in Bronx can provide insights into the affordability of housing, neighborhood dynamics, gentrification trends, and the impact of urban revitalization efforts. Moreover, understanding the housing market in Bronx can contribute to efforts aimed at promoting equitable development, addressing housing disparities, and enhancing the overall quality of life for residents.
+
+
+
+## Load Package(s)
+```{r}
+library(tidyverse)
+library(webshot)
+library(magick)
+library(png)
+```
+
+
+## Import Data
+```{r}
+## Imported data using "copy path" via github
+bronx_p_2023 <- read.csv(url("https://raw.githubusercontent.com/baa5234/FinalProject/main/2023_bronx%20(1).csv"))
+
+# Link to the data in case it may not work https://github.com/baa5234/FinalProject/blob/main/2023_bronx%20(1).csv
+#Raw url if you prefer to use that instead of copy path : https://raw.githubusercontent.com/baa5234/FinalProject/main/2023_bronx%20(1).csv?token=GHSAT0AAAAAACNSJLCYSTCIXFGYY5NRLCJWZR34U6Q
+
+
+colnames(bronx_p_2023)
+head(bronx_p_2023)
+
+
+# Checking for missing values
+sum(is.na(bronx_p_2023))
+
+```
+
+**There are 8,113 missing values. We have to remove them.**
+
+
+## Clean and Tidy Data
+```{r}
+##Selecting necessary columns
+bx_prop_23 <- bronx_p_2023 %>%
+  select(NEIGHBORHOOD, `BUILDING.CLASS.CATEGORY`, LOT, `ZIP.CODE`, `YEAR.BUILT`, `GROSS..SQUARE.FEET`, `BUILDING.CLASS.AT.TIME.OF.SALE`, `SALE.PRICE`, `SALE.DATE`)
+
+head(bx_prop_23)
+
+
+##Renaming column(s)
+bx_props_23 <- rename(bx_prop_23, GROSS.SQ.FEET= GROSS..SQUARE.FEET, BUILDING.CLASS= BUILDING.CLASS.AT.TIME.OF.SALE)
+
+colnames(bx_props_23)
+
+ sum(is.na(bx_props_23))
+
+```
+
+**Now After removing some columns there are 642 remaining values.** 
+**We also renamed two columns to make it a bit easier for us.**
+
+\
+
+## Continuation - Cleaning Data
+```{r}
+
+#Make 0's and 10's in dataframe to be NA
+ bx_props_23[bx_props_23==0] <- NA
+bx_props_23[bx_props_23==10] <- NA
+
+
+#Remove NA'S from dataframe
+bronx_props_2023 <- na.omit(bx_props_23)
+
+#Removing Comma from Sales Price
+bronx_props_2023$SALE.PRICE <- gsub(",", "", bronx_props_2023$SALE.PRICE )
+
+#View new Dataframe
+view(bronx_props_2023)
+
+# Make SALE.PRICE to numeric
+bronx_props_2023$SALE.PRICE  <- as.numeric(bronx_props_2023$SALE.PRICE )
+
+#Format Sale.DATE into month and date 
+bronx_props_2023$SALE.DATE <- format(as.Date(bronx_props_2023$SALE.DATE, format="%m/%d/%y"),"%m/%d")
+
+view(bronx_props_2023)
+
+```
+
+## Analyze Data (with filter) Based on Location
+
+
+Now in this analysis I wanted to focus on only housing properties so I filtered what I want to focus on, removing all other properties sold in 2023 such as commercial buildings, garages, parking lots , and more.
+
+The 3 types of properties I will be analyzing are "One Family Housing", "Two Family Housing" and "Condos"(which is apartment style housing property).  
+
+
+## Analysis Based on One Family Housing 
+
+<font size = 5> Mean Price by Neighborhood</font>
+```{r}
+#filter one_family house
+one_fam_23 <- dplyr::filter(bronx_props_2023, BUILDING.CLASS.CATEGORY== "01 ONE FAMILY DWELLINGS")
+
+#plot of mean sales by neighborhood
+mean_sales_by_neighborhood <- aggregate(SALE.PRICE ~ NEIGHBORHOOD, data = one_fam_23, FUN = mean)
+
+P <- ggplot(mean_sales_by_neighborhood, aes(x = NEIGHBORHOOD, y = SALE.PRICE)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Neighborhood", y = "Mean Sales Price", title = "One Family House Mean Sales Price by Neighborhood")
+P + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+\
+**Based on the mean anaylsis of One Fam Housing. The top 5 mean by neighborhood (locations) of One Family Housing sold in Bronx of 2023 are Fieldston, Riverdale, City Island, Bedford Park, and Kingsbridge(Jerome Park).**
+
+<font size = 5> Median Price by Neighborhood</font>
+
+```{r}
+median_price_by_neighborhood <- one_fam_23 %>%
+  group_by(NEIGHBORHOOD) %>%
+  summarize(median_price = median(SALE.PRICE))
+
+
+P2 <- ggplot(median_price_by_neighborhood, aes(x = NEIGHBORHOOD, y = median_price)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Neighborhood", y = "Median Price", title = "Median Price by Neighborhood")
+P2 + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+\ 
+**Based on the median analysis of One Fam Housing. The top 5 median by neighborhood (locations) of One Family Housing sold in Bronx of 2023 are Fieldston, Riverdale, City Island, Kingsbridge Heights (University Heights), and Kingsbridge(Jerome Park).**
+
+**In both Mean and Median the top 3 housing sales price were the same Fieldston, Riverdale, and City Island. These are 3 of many safest neighborhoods in the Bronx.**
+
+\
+
+## Total of One Family Housing Sold in Bronx
+ \
+**This analysis might come as a suprise. But the reason for this analysis is to show where houses are mostly sold. Based on the data we can see that in Throggs Neck, Riverdale and Baychester had the highest total sales prices.** 
+
+```{r}
+total_price_by_neighborhood <- one_fam_23 %>%
+  group_by(NEIGHBORHOOD) %>%
+  summarize(total_price = sum(SALE.PRICE))
+
+
+P3 <- ggplot(total_price_by_neighborhood, aes(x = NEIGHBORHOOD, y = total_price)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(x = "Neighborhood", y = "Total Price", title = "Total Price by Neighborhood")
+P3 + theme(axis.text.x = element_text(angle = 65, hjust = 1))
+
+
+```
+
+**Here I want us to look at the number of houses sold, and compare it to the total sales prices. Lets compare Riverdale with another neighborhood as it was on the top 3 in total sales prices by neighborhood. Comparing Riverdale as 34 houses were sold in 2023 and Soundview as 33 houses were sold in 2023: we can that despite the number of houses sold being nearly similar with a difference of 1 sold less. Looking at the previous total by neighborhood Riverdale surpasses Soundview. This shows location matters.** 
+
+```{r}
+neighborhood_counts <- table(one_fam_23$NEIGHBORHOOD)
+print(neighborhood_counts)
+```
+
+\
+
+## Analysis Based on Year Built
+
+\
+<font size=3> Does the year the house was built play a role in Housing Sales Price ?</font>
+
+\
+```{r}
+price_by_year <- one_fam_23 %>%
+  group_by(YEAR.BUILT) %>%
+  summarize(total_price1 = sum(SALE.PRICE))
+
+
+
+d <- ggplot(price_by_year, aes(x = YEAR.BUILT, y = total_price1/1000)) +
+  geom_line(color = "blue") +
+  geom_point(color = "red") +
+  labs(x = "Year Built", y = "Sales Price", title = "Sales Prices Over Time") 
+   d+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+```
+\
+**Using One Family house dataframe. Housing Prices based on Year Built we cannot tell too much cause the sales prices is not consistent it is up and as the years built goes by. But we can see a major difference as houses built in the 1900s are more pricier(have higher sales prices) than houses built in 2000s despite having newer amenities and more recent structures.** 
+
+\
+
+##  Analysis Based on Two Family Housing
+
+
+```{r}
+#filter two family housing properties
+two_fam_23 <- dplyr::filter(bronx_props_2023, BUILDING.CLASS.CATEGORY== "02 TWO FAMILY DWELLINGS")
+
+#plot of mean sales by neighborhood
+mean_sales_by_neigh_pt2 <- aggregate(SALE.PRICE ~ NEIGHBORHOOD, data = two_fam_23, FUN = mean)
+
+P <- ggplot(mean_sales_by_neigh_pt2, aes(x = NEIGHBORHOOD, y = SALE.PRICE/10)) +
+  geom_bar(stat = "identity", fill="purple") +
+  labs(x = "Neighborhood", y = "Mean Sales Price(*10)", title = "Two Family House Mean Sales Price by Neighborhood") 
+P + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+\
+**Top 3 mean housing sales price of two family properties in Bronx are Riverdale, Mount Hope(Port Morris), and Fieldston.**
+
+```{r}
+median_price_by_neigh_pt2 <-two_fam_23 %>%
+  group_by(NEIGHBORHOOD) %>%
+  summarize(median_price2 = median(SALE.PRICE))
+
+
+P2 <- ggplot(median_price_by_neigh_pt2, aes(x = NEIGHBORHOOD, y = median_price2)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  labs(x = "Neighborhood", y = "Median Price", title = "Median Price by Neighborhood of Two Family House")
+P2 + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+\
+**Top 3 mean housing sales price of two family properties in Bronx are Riverdale, Mount Hope(Port Morris), and Westchester, followed by Fieldston, City Island, and few more.**
+
+\
+
+## Analysis Based on Condos
+
+\
+Now I wanted to also look at housing sale prices on condominiums(CONDOS) to also prove if location matter aside from the one family houses and two family houses.
+
+\
+
+```{r}
+#filter the condos (using multiple)
+filtered_condos <- bronx_props_2023 %>%
+  filter(BUILDING.CLASS.CATEGORY %in% c("04 TAX CLASS 1 CONDOS", "13 CONDOS - ELEVATOR APARTMENTS"))
+
+```
+
+```{r}
+
+mean_condos_price <- filtered_condos %>%
+  group_by(NEIGHBORHOOD) %>%
+  summarize(mean_sales_price3 = mean(SALE.PRICE))
+
+# Create a bar plot of mean sales price by neighborhood
+barplot <- ggplot(mean_condos_price, aes(x = NEIGHBORHOOD, y = mean_sales_price3/10, fill = NEIGHBORHOOD)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Mean Condos Sales Price by Neighborhood",
+       x = "Neighborhood",
+       y = "Mean Sales Price (*10)",
+       fill = "Neighborhood") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
+
+# Display the bar plot
+print(barplot)
+
+```
+
+```{r}
+
+# Group by neighborhood and calculate 
+median_condos_price <- filtered_condos %>%
+  group_by(NEIGHBORHOOD) %>%
+  summarize(median_sales_price3 = median(SALE.PRICE))
+
+# Create a bar plot of median sales price by neighborhood
+barplot <- ggplot(median_condos_price, aes(x = NEIGHBORHOOD, y = median_sales_price3/10, fill = NEIGHBORHOOD)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Median Condos Sales Price by Neighborhood",
+       x = "Neighborhood",
+       y = "Median Sales Price(*10)",
+       fill = "Neighborhood") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for better readability
+
+# Display the bar plot
+print(barplot)
+
+```
+
+**In both Condos Mean and Median Sales Prices  based on neighborhoods - (Condos), we can see that the top 5 neighborhoods with high sales prices are Riverdale, City Island, Kingsbridge(Jerome Park) Country Club, and Throggs Neck.**
+
+\
+
+## Lets look at a statiscal data
+
+\
+Using the filtered Two Family DataFrame Based on Gross Sq Feet, lets analyze sales price. \
+
+```{r , warning=FALSE}
+
+# Perform a simple linear regression
+lm_model <- lm(SALE.PRICE ~ GROSS.SQ.FEET  , data = two_fam_23)
+
+
+# Print the summary of the regression model using code below. 
+# summary(lm_model)
+
+
+# Plot diagnostic plots
+plot(lm_model)
+
+```
+
+\
+
+**Using code : summary(lm_model) it gives us the results, R Squared is 0.6653 meaning that gross square feet plays a significant role in the sales prices. Also the plots align with the residuals. Due to the summary being long it is shown as comment.**
+
+\
+
+## Confirming Analysis of Sales Prices 
+
+<font size = 5> Safest neighborhoods in Bronx (Google) </font>
+
+```{r}
+
+library(png)
+
+
+png_url <- "https://raw.githubusercontent.com/baa5234/FinalProject/main/SAFETEST%20NEIGHBORHOOD%20IN%20BX%20ImG.png"
+
+# Read the PNG image from the URL
+
+download.file(png_url,
+              "SAFETEST NEIGHBORHOOD IN BX ImG.png",mode="wb")
+
+
+img <- readPNG( "SAFETEST NEIGHBORHOOD IN BX ImG.png")
+
+
+# Display the image
+plot(1:2, type = "n", axes = FALSE, xlab = "", ylab = "")
+rasterImage(img, 1, 1, 2, 2)
+
+
+```
+
+**Based on the image we can see the safest neighborhoods are the following above. Also, the article link :https://propertyclub.nyc/article/safest-neighborhoods-in-the-bronx  shows Riverdale is number 1 safest neighborhood in Bronx. But also we can see the neighborhoods with highest sales prices are on the list above.**
+
+\
+
+<font size = 5> Using Webshot of a map neighborhoods in Bronx </font>
+
+```{r}
+
+
+library(webshot)
+library(magick)
+
+# Define the URL
+mapurl <- "https://www.google.com/maps/d/u/0/viewer?mid=1eB3cfuq2tEUpHgHZ6mKzV1UjrU8&hl=en_US&ll=40.854060357151404%2C-73.85685142264114&z=12"
+
+# Capture screenshot
+webshot(mapurl, "map_screenshot.png")
+
+# Read the captured image
+map_image <- image_read("map_screenshot.png")
+
+# Display the image
+plot(map_image)
+
+
+```
+
+**The screenshot above shows safest and dangerous neighborhoods in Bronx. As you can see the following the highest sales prices based on location are not highlighted as red but instead as yellow meaning safe neighborhood.**
+
+\
+
+## Interactive Crime Data MAP 
+
+**Here is a url that you can hover across neighborhoods in the Bronx. You will see neighborhoods with highest sales price have lower crime rates.**
+```{r}
+
+# 
+crimedata_url <- "https://www.neighborhoodscout.com/ny/bronx/crime"
+
+# Open the URL in the default web browser
+browseURL(crimedata_url)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+
