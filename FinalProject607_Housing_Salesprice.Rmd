@@ -24,7 +24,7 @@ library(png)
 
 ## Import Data
 ```{r}
-## Import dataframe 
+## Import data
 bronx_p_2023 <- read.csv(url("https://raw.githubusercontent.com/baa5234/FinalProject/main/2023_bronx%20(1).csv"))
 
 # Link to the data in case it may not work https://github.com/baa5234/FinalProject/blob/main/2023_bronx%20(1).csv
